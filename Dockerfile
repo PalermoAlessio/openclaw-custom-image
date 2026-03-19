@@ -12,3 +12,5 @@ RUN apt-get update && apt-get install -y \
 
 # Torniamo all'utente sicuro
 USER node
+
+ 
