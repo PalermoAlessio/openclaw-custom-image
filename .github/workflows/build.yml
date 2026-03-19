@@ -1,0 +1,40 @@
+name: Costruisci e Pubblica Immagine
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'Dockerfile'
+  workflow_dispatch: # Questo ci permetterà di avviarlo anche a mano con un bottone se serve!
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Fondamentale per autorizzare GitHub a salvare l'immagine
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Prepara il nome utente in minuscolo (Docker lo esige)
+        run: echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
+      - name: Login su GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Pass magico fornito in automatico da GitHub
+
+      - name: Costruisci e carica l'immagine
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/openclaw-custom:latest
